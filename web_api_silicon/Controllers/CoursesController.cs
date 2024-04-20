@@ -4,6 +4,7 @@ using Infrastructure.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 namespace web_api_silicon.Controllers;
 
@@ -17,25 +18,29 @@ public class CoursesController(DataContext dataContext) : ControllerBase
     {
         if (ModelState.IsValid)
         {
-            if(!await _dataContext.Courses.AnyAsync(x => x.Title == dto.Title))
+            try
             {
-                var course = new Course
+                if (!await _dataContext.Courses.AnyAsync(x => x.Title == dto.Title))
                 {
-                    Image = dto.Image,
-                    Title = dto.Title,
-                    Author = dto.Author,
-                    OriginalPrice = dto.OriginalPrice,
-                    DiscountPrice = dto.DiscountPrice,
-                    Hours = dto.Hours,
-                    LikesInProcent = dto.LikesInProcent,
-                    NumberOfLikes = dto.NumberOfLikes,
-                    IsDigital = dto.IsDigital,
-                    IsBestseller = dto.IsBestseller,
-                };
-                _dataContext.Courses.Add(course);
-                await _dataContext.SaveChangesAsync();
-                return Created();
+                    var course = new Course
+                    {
+                        Image = dto.Image,
+                        Title = dto.Title,
+                        Author = dto.Author,
+                        OriginalPrice = dto.OriginalPrice,
+                        DiscountPrice = dto.DiscountPrice,
+                        Hours = dto.Hours,
+                        LikesInProcent = dto.LikesInProcent,
+                        NumberOfLikes = dto.NumberOfLikes,
+                        IsDigital = dto.IsDigital,
+                        IsBestseller = dto.IsBestseller,
+                    };
+                    _dataContext.Courses.Add(course);
+                    await _dataContext.SaveChangesAsync();
+                    return Created();
+                }
             }
+            catch (Exception ex) { Debug.WriteLine(ex); }
             return Conflict();
         }
         return BadRequest();
@@ -45,11 +50,16 @@ public class CoursesController(DataContext dataContext) : ControllerBase
 
     public async Task<IActionResult> GetAllCoursesAsync()
     {
-        var courses = await _dataContext.Courses.ToListAsync();
-        if(courses != null)
+        try
         {
-            return Ok(courses);
+            var courses = await _dataContext.Courses.ToListAsync();
+            if (courses != null)
+            {
+                return Ok(courses);
+            }
         }
+        catch (Exception ex) { Debug.WriteLine(ex); }
+        
         return NotFound();
     }
 
@@ -57,11 +67,16 @@ public class CoursesController(DataContext dataContext) : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetOneCourseAsync(string id)
     {
-        var course = await _dataContext.Courses.FirstOrDefaultAsync(x => x.Id == id);
-        if (course != null)
+        try
         {
-            return Ok(course);
+            var course = await _dataContext.Courses.FirstOrDefaultAsync(x => x.Id == id);
+            if (course != null)
+            {
+                return Ok(course);
+            }
         }
+        catch (Exception ex) { Debug.WriteLine(ex); }
+        
         return NotFound();
     }
 

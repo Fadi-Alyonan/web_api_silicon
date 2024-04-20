@@ -1,9 +1,9 @@
 ﻿using Infrastructure.Context;
 using Infrastructure.Dto;
 using Infrastructure.Entities;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 namespace web_api_silicon.Controllers;
 
@@ -18,22 +18,26 @@ public class SubscribController(DataContext dataContext) : ControllerBase
     {
         if (ModelState.IsValid)
         {
-            if (!await _dataContext.Subscribes.AnyAsync(x => x.Email == dto.Email))
+            try
             {
-                var Sunscrib = new SubscribEntity
+                if (!await _dataContext.Subscribes.AnyAsync(x => x.Email == dto.Email))
                 {
-                    Email = dto.Email,
-                    DailyNewsletter = dto.DailyNewsletter,
-                    AdvertisingUpdates = dto.AdvertisingUpdates,
-                    WeekinReview = dto.WeekinReview,
-                    EventUpdates = dto.EventUpdates,
-                    StartupsWeekly = dto.StartupsWeekly,
-                    Podcasts = dto.Podcasts
-                };
-                _dataContext.Subscribes.Add(Sunscrib);
-                await _dataContext.SaveChangesAsync();
-                return Created();
+                    var Sunscrib = new SubscribEntity
+                    {
+                        Email = dto.Email,
+                        DailyNewsletter = dto.DailyNewsletter,
+                        AdvertisingUpdates = dto.AdvertisingUpdates,
+                        WeekinReview = dto.WeekinReview,
+                        EventUpdates = dto.EventUpdates,
+                        StartupsWeekly = dto.StartupsWeekly,
+                        Podcasts = dto.Podcasts
+                    };
+                    _dataContext.Subscribes.Add(Sunscrib);
+                    await _dataContext.SaveChangesAsync();
+                    return Created();
+                }
             }
+            catch (Exception ex) { Debug.WriteLine(ex); }
             return Conflict();
         }
         return BadRequest();
@@ -43,11 +47,16 @@ public class SubscribController(DataContext dataContext) : ControllerBase
 
     public async Task<IActionResult> GetAllSunscribersAsync()
     {
-        var Sunscribers = await _dataContext.Subscribes.ToListAsync();
-        if (Sunscribers != null)
+        try
         {
-            return Ok(Sunscribers);
+            var Sunscribers = await _dataContext.Subscribes.ToListAsync();
+            if (Sunscribers != null)
+            {
+                return Ok(Sunscribers);
+            }
         }
+        catch (Exception ex) { Debug.WriteLine(ex); }
+       
         return NotFound();
     }
 
@@ -55,24 +64,32 @@ public class SubscribController(DataContext dataContext) : ControllerBase
     [HttpGet("{email}")]
     public async Task<IActionResult> GetOneSunscriberAsync(string email)
     {
-        var Sunscriber = await _dataContext.Subscribes.FirstOrDefaultAsync(x => x.Email == email);
-        if (Sunscriber != null)
+        try
         {
-            return Ok(Sunscriber);
+            var Sunscriber = await _dataContext.Subscribes.FirstOrDefaultAsync(x => x.Email == email);
+            if (Sunscriber != null)
+            {
+                return Ok(Sunscriber);
+            }
         }
+        catch (Exception ex) { Debug.WriteLine(ex); }
         return NotFound();
     }
 
     [HttpDelete("{email}")]
     public async Task<IActionResult> DeleteOneSunscriberAsync(string email)
     {
-        var Sunscriber = await _dataContext.Subscribes.FirstOrDefaultAsync(x => x.Email == email);
-        if (Sunscriber != null)
+        try
         {
-            _dataContext.Subscribes.Remove(Sunscriber);
-            await _dataContext.SaveChangesAsync();
-            return Ok(Sunscriber);
+            var Sunscriber = await _dataContext.Subscribes.FirstOrDefaultAsync(x => x.Email == email);
+            if (Sunscriber != null)
+            {
+                _dataContext.Subscribes.Remove(Sunscriber);
+                await _dataContext.SaveChangesAsync();
+                return Ok(Sunscriber);
+            }
         }
+        catch (Exception ex) { Debug.WriteLine(ex); }
         return NotFound(email);
     }
 }
